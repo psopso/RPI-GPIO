@@ -3,15 +3,8 @@ import smbus
 import sys
 
 DEVICE_BUS = 1
-DEVICE_ADDR = 0x10
-bus = smbus.SMBus(DEVICE_BUS)
 
-def pokus():
-  for i in range(1,5):
-    bus.write_byte_data(DEVICE_ADDR, i, 0xFF)
-    t.sleep(1)
-    bus.write_byte_data(DEVICE_ADDR, i, 0x00)
-    t.sleep(1)
+bus = smbus.SMBus(DEVICE_BUS)
 
 def switch_on(device, ind, momentary):
   bus.write_byte_data(device, ind, 0xFF)
