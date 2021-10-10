@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, DEVICE_DEFAULT_NAME
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -16,13 +17,28 @@ from .relayddl import switch_is_on
 CONF_I2C_ADDRESS = "i2c_address"
 DEFAULT_I2C_ADDRESS = 0x10
 CONF_PINS = "pins"
+CONF_CHANNELS = "channels"
+CONF_INDEX = "index"
+CONF_INVERT_LOGIC = "invert_logic"
+CONF_INITIAL_STATE = "initial_state"
+CONF_MOMENTARY = "momentary"
+
+_CHANNELS_SCHEMA = vol.Schema(
+    [
+        {
+            vol.Required(CONF_INDEX): cv.positive_int,
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_MOMENTARY, default=0): cv.positive_int,
+    }
+    ]
+)
 
 
-_SWITCHES_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PINS): _SWITCHES_SCHEMA,
-        vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
+        vol.Required(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
+        vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA,
     }
 )
 
@@ -34,18 +50,23 @@ def setup_platform(
 ) -> None:
     """Set up the sensor platform."""
     switches = []
-    pins = config.get(CONF_PINS)
     device = config.get(CONF_I2C_ADDRESS)
-    for pin_num, pin_name in pins.items():
-        switches.append(MySwitch(device, pin_name,pin_num))
-    add_entities(switches)    
+    channels = config.get(CONF_CHANNELS)
+    for channel_config in channels:
+      ind = channel_config[CONF_INDEX]
+      name = channel_config[CONF_NAME]
+      momentary = channel_config[CONF_MOMENTARY]
+      switches.append(MySwitch(device,ind,name,momentary))
+
+    add_entities(switches)
 
 class MySwitch(SwitchEntity):
-    def __init__(self, device, name, pin):
+    def __init__(self, device, ind, name, momentary):
         self._is_on = False
         self._device = device
+        self._ind = ind + 1
         self._name = name or DEVICE_DEFAULT_NAME
-        self._pin = pin
+        self._momentary = momentary
 
     @property
     def name(self):
@@ -55,14 +76,14 @@ class MySwitch(SwitchEntity):
     @property
     def is_on(self):
         """If the switch is currently on or off."""
-        self._is_on = switch_is_on(self._device, self._pin)
+        self._is_on = switch_is_on(self._device, self._ind)
         return self._is_on
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        switch_on(self._device, self._pin)
+        switch_on(self._device, self._ind, self._momentary)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        switch_off(self._device, self._pin)
+        switch_off(self._device, self._ind, self._momentary)
         self._is_on = False
