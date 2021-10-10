@@ -8,6 +8,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, DEVICE_DEFAULT_NAME
 
+import time as time
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from .relayddl import switch_on
@@ -28,7 +29,7 @@ _CHANNELS_SCHEMA = vol.Schema(
         {
             vol.Required(CONF_INDEX): cv.positive_int,
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_INITIAL_STATE, default=False): cv.boolean,
             vol.Optional(CONF_MOMENTARY, default=0): cv.positive_int,
     }
     ]
@@ -55,18 +56,25 @@ def setup_platform(
     for channel_config in channels:
       ind = channel_config[CONF_INDEX]
       name = channel_config[CONF_NAME]
+      init = channel_config[CONF_INITIAL_STATE]
       momentary = channel_config[CONF_MOMENTARY]
-      switches.append(MySwitch(device,ind,name,momentary))
+      switches.append(MySwitch(device,ind,name,init,momentary))
 
     add_entities(switches)
 
 class MySwitch(SwitchEntity):
-    def __init__(self, device, ind, name, momentary):
+    def __init__(self, device, ind, name, init, momentary):
         self._is_on = False
         self._device = device
         self._ind = ind + 1
         self._name = name or DEVICE_DEFAULT_NAME
+        self._init = init
         self._momentary = momentary
+
+        if init:
+          switch_on(self._device, self._ind, 0)
+        else:
+          switch_off(self._device, self._ind, 0)
 
     @property
     def name(self):
@@ -82,6 +90,9 @@ class MySwitch(SwitchEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         switch_on(self._device, self._ind, self._momentary)
+        if self._momentary > 0:
+          time.sleep(0.1*self._momentary)
+          self.turn_off()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
