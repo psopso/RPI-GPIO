@@ -142,6 +142,6 @@ class MySwitch(SwitchEntity):
         switch_off(self._device, self._ind)
         if self._toggle_until is not None:
           if self._is_on:
-          _LOGGER.debug('turned off')
-          self._toggle_until = None
+            _LOGGER.debug('turned off')
+            self._toggle_until = None
         self._is_on = False
