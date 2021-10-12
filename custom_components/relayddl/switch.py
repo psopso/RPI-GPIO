@@ -140,4 +140,8 @@ class MySwitch(SwitchEntity):
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         switch_off(self._device, self._ind)
+        if self._toggle_until is not None:
+          if self._is_on:
+          _LOGGER.debug('turned off')
+          self._toggle_until = None
         self._is_on = False
