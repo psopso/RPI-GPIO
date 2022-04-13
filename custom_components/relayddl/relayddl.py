@@ -1,6 +1,8 @@
 import time as t
-import smbus
 import sys
+
+from smbus2 import SMBus
+bus = SMBus(1)
 
 DEVICE_BUS = 1
 DEVICE_ADDR = 0x10
