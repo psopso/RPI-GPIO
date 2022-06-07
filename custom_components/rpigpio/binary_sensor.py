@@ -5,7 +5,6 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.components import rpi_gpio
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
