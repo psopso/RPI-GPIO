@@ -15,6 +15,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
+from . import write_output
+from . import read_input
+from . import setup_input
+from . import setup_output
+from . import edge_detect
+
 CONF_RELAY_PIN = "relay_pin"
 CONF_RELAY_TIME = "relay_time"
 CONF_STATE_PIN = "state_pin"
@@ -103,9 +109,9 @@ class RPiGPIOCover(CoverEntity):
         self._relay_time = relay_time
         self._invert_state = invert_state
         self._invert_relay = invert_relay
-        rpi_gpio.setup_output(self._relay_pin)
-        rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
-        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
+        setup_output(self._relay_pin)
+        setup_input(self._state_pin, self._state_pull_mode)
+        write_output(self._relay_pin, 0 if self._invert_relay else 1)
 
     @property
     def name(self):
@@ -114,7 +120,7 @@ class RPiGPIOCover(CoverEntity):
 
     def update(self):
         """Update the state of the cover."""
-        self._state = rpi_gpio.read_input(self._state_pin)
+        self._state = read_input(self._state_pin)
 
     @property
     def is_closed(self):
@@ -123,9 +129,9 @@ class RPiGPIOCover(CoverEntity):
 
     def _trigger(self):
         """Trigger the cover."""
-        rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
+        write_output(self._relay_pin, 1 if self._invert_relay else 0)
         sleep(self._relay_time)
-        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
+        write_output(self._relay_pin, 0 if self._invert_relay else 1)
 
     def close_cover(self, **kwargs):
         """Close the cover."""

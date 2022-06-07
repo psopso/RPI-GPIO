@@ -13,6 +13,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
+from . import write_output
+from . import read_input
+from . import setup_input
+from . import setup_output
+from . import edge_detect
+
 CONF_PULL_MODE = "pull_mode"
 CONF_PORTS = "ports"
 CONF_INVERT_LOGIC = "invert_logic"
@@ -56,8 +62,8 @@ class RPiGPIOSwitch(SwitchEntity):
         self._port = port
         self._invert_logic = invert_logic
         self._state = False
-        rpi_gpio.setup_output(self._port)
-        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        setup_output(self._port)
+        write_output(self._port, 1 if self._invert_logic else 0)
 
     @property
     def name(self):
@@ -76,12 +82,12 @@ class RPiGPIOSwitch(SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
+        write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False
         self.schedule_update_ha_state()

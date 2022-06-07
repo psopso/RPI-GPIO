@@ -15,6 +15,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
+from . import write_output
+from . import read_input
+from . import setup_input
+from . import setup_output
+from . import edge_detect
+
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_PORTS = "ports"
@@ -67,7 +73,7 @@ class RPiGPIOBinarySensor(BinarySensorEntity):
         """Read state from GPIO."""
         await asyncio.sleep(float(self._bouncetime) / 1000)
         self._state = await self.hass.async_add_executor_job(
-            rpi_gpio.read_input, self._port
+            read_input, self._port
         )
         self.async_write_ha_state()
 
@@ -80,13 +86,13 @@ class RPiGPIOBinarySensor(BinarySensorEntity):
         self._invert_logic = invert_logic
         self._state = None
 
-        rpi_gpio.setup_input(self._port, self._pull_mode)
+        setup_input(self._port, self._pull_mode)
 
         def edge_detected(port):
             """Edge detection handler."""
             self.hass.add_job(self.async_read_gpio)
 
-        rpi_gpio.edge_detect(self._port, edge_detected, self._bouncetime)
+        edge_detect(self._port, edge_detected, self._bouncetime)
 
     @property
     def should_poll(self):
@@ -105,4 +111,4 @@ class RPiGPIOBinarySensor(BinarySensorEntity):
 
     def update(self):
         """Update the GPIO state."""
-        self._state = rpi_gpio.read_input(self._port)
+        self._state = read_input(self._port)
