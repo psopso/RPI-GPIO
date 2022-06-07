@@ -5,7 +5,6 @@ from time import sleep
 
 import voluptuous as vol
 
-from homeassistant.components import rpi_gpio
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_COVERS, CONF_NAME
 from homeassistant.core import HomeAssistant
